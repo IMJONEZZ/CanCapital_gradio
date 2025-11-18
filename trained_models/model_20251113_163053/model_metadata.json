@@ -1,0 +1,9 @@
+{
+  "target_column": "collection_case_days",
+  "model_type": "LinearRegression",
+  "best_mae": 95.6738704977813,
+  "gbr_mae": 104.97826715718581,
+  "linreg_mae": 95.6738704977813,
+  "trained_at": "20251113_163053",
+  "description": "CANCapital loan collection prediction model for 'collection_case_days'"
+}

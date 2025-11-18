@@ -1,0 +1,92 @@
+================================================================================
+MODEL PREDICTION RESULTS
+Generated on: 2025-11-14 12:16:39
+Model Directory: model_20251113_163053
+================================================================================
+
+================================================================================
+CANCapital Model Prediction
+================================================================================
+
+Loading model from: ./trained_models/model_20251113_163053
+Model Information:
+  target_column: collection_case_days
+  model_type: LinearRegression
+  best_mae: 95.6739
+  gbr_mae: 104.9783
+  linreg_mae: 95.6739
+  trained_at: 20251113_163053
+  description: CANCapital loan collection prediction model for 'collection_case_days'
+
+Available model files: ['best_model.pkl', 'gbr_model.pkl', 'linearreg_model.pkl']
+
+Loaded data file: temp_prediction_data.csv
+Data shape: (4217, 30)
+Columns: ['contract_number', 'broker', 'borrower', 'contract_type', 'concurrent_contract_type', 'funded_date', ' original_funded_amount ', ' original_repayment_amount ', 'legal_entity_type', 'sic_count', 'collectin_case_active', 'collection_case_open_date', 'collection_case_close_date', 'collection_case_days', 'collection_status', 'collection_sub_status', 'days_past_due', 'no_missed_payments', 'percent_paid', 'charged_off_date', 'loan_contract_frequency', 'last_payment_date', 'collection_case_owner', 'city_and_state', 'demand_letter_sent_date', 'pg_date_of_birth', 'pg_fico', 'can_tier', 'pg_real_estate', ' total_collected_since_collection_case_created ']
+Original data shape: (4217, 30)
+Applying feature engineering for prediction...
+Feature engineering complete. Added engineered features:
+  borrower_age: 4217/4217 non-null values
+  days_funded_to_open: 4217/4217 non-null values
+  days_lastpay_to_close: 2624/4217 non-null values
+  has_collection_case_close_date: 2629/4217 have the date
+  has_demand_letter_sent_date: 1553/4217 have the date
+Filled 0 missing values in 'collection_case_days' with mean: 75.50
+Filled 0 missing values in 'pg_fico' with mean: 701.53
+Filled 0 missing values in 'days_lastpay_to_close' with mean: -54.89
+Removing target column 'collection_case_days' from prediction data
+Final processed data shape: (4217, 34)
+
+----------------------------------------
+Loading Best Model (Auto-selected) from: best_model.pkl
+----------------------------------------
+Successfully loaded model from: trained_models/model_20251113_163053/best_model.pkl
+Data columns available (34): ['contract_number', 'broker', 'borrower', 'contract_type', 'concurrent_contract_type', 'funded_date', ' original_funded_amount ', ' original_repayment_amount ', 'legal_entity_type', 'sic_count', 'collectin_case_active', 'collection_case_open_date', 'collection_case_close_date', 'collection_status', 'collection_sub_status', 'days_past_due', 'no_missed_payments', 'percent_paid', 'charged_off_date', 'loan_contract_frequency', 'last_payment_date', 'collection_case_owner', 'city_and_state', 'demand_letter_sent_date', 'pg_date_of_birth', 'pg_fico', 'can_tier', 'pg_real_estate', ' total_collected_since_collection_case_created ', 'borrower_age', 'days_funded_to_open', 'days_lastpay_to_close', 'has_collection_case_close_date', 'has_demand_letter_sent_date']
+Model expects features (16): ['collection_case_id', 'funded_date', 'pg_date_of_birth', 'last_payment_date', 'demand_letter_sent_date', 'collection_case_open_date', 'amount', 'payment_status', 'case_type', 'region', 'credit_score', 'borrower_age', 'days_funded_to_open', 'days_lastpay_to_close', 'has_demand_letter_sent_date', 'log_collection_case_days']
+❌ Missing required columns: {'region', 'payment_status', 'collection_case_id', 'case_type', 'credit_score', 'amount', 'log_collection_case_days'}
+Added missing column 'region' with default value 0.5
+Added missing column 'payment_status' with default value 0.5
+Added missing column 'collection_case_id' with default value 0.5
+Added missing column 'case_type' with default value 0.5
+Added missing column 'credit_score' with default value 0.5
+Added missing column 'amount' with default value 0.5
+Added missing column 'log_collection_case_days' with default value 30.0
+Removed extra columns: ['contract_number', 'has_collection_case_close_date', 'loan_contract_frequency', ' original_repayment_amount ', 'can_tier', 'days_past_due', 'broker', 'legal_entity_type', 'no_missed_payments', 'percent_paid', ' total_collected_since_collection_case_created ', 'collection_case_close_date', ' original_funded_amount ', 'collection_sub_status', 'collection_status', 'sic_count', 'charged_off_date', 'city_and_state', 'concurrent_contract_type', 'collection_case_owner', 'pg_fico', 'contract_type', 'pg_real_estate', 'collectin_case_active', 'borrower']
+
+============================================================
+REGRESSION PREDICTIONS - Best Model (Auto-selected)
+============================================================
+Prediction Summary:
+  Mean: -2.58
+  Std Dev: 4.93
+  Range: [-24.02, 5.34]
+  Count: 4217
+
+First 10 Predictions:
+  Sample 1: -4.97
+  Sample 2: -11.34
+  Sample 3: 3.42
+  Sample 4: -9.40
+  Sample 5: -4.04
+  Sample 6: -4.00
+  Sample 7: -16.26
+  Sample 8: -10.60
+  Sample 9: -4.71
+  Sample 10: -8.21
+  ... and 4207 more
+
+✅ Successfully made predictions using Best Model (Auto-selected)
+
+📄 Prediction results saved to: predictions_best_model_20251114_121639.txt
+
+================================================================================
+PREDICTION COMPLETE
+================================================================================
+
+
+Warnings/Errors:
+/home/imjonezz/Desktop/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/sklearn/impute/_base.py:653: UserWarning: Skipping features without any observed values: ['days_lastpay_to_close']. At least one non-missing value is needed for imputation with strategy='median'.
+  warnings.warn(
+
+
+================================================================================
