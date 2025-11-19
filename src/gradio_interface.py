@@ -41,7 +41,7 @@ def run_eda_analysis(csv_file_path):
 
         # Import and run the complete EDA function
         sys.path.append(".")
-        from eda import run_complete_eda
+        from src.eda import run_complete_eda
 
         # Run complete EDA analysis
         full_results = run_complete_eda(temp_file)
@@ -129,7 +129,7 @@ For universal data analysis regardless of format, the Basic EDA provides compreh
         shutil.copy2(csv_file_path, temp_file)
 
         # Build command
-        cmd = [sys.executable, "eda_and_model.py", temp_file]
+        cmd = [sys.executable, "./src/eda_and_model.py", temp_file]
 
         if target_col:
             cmd.extend(["--target", target_col])
@@ -238,19 +238,25 @@ Don't force ML Pipeline on incompatible datasets
             ):
                 warnings = []
                 for line in lines:
-                    if "warning:" in result.stdout.lower() or "error:" in result.stdout.lower():
+                    if (
+                        "warning:" in result.stdout.lower()
+                        or "error:" in result.stdout.lower()
+                    ):
                         warnings.append(line.strip())
                 if warnings:
                     result_text += f"\n\nAdditional Info:\n" + "\n".join(warnings[:3])
 
             # Create downloadable text file
             from datetime import datetime
+
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             download_filename = f"ml_pipeline_results_{timestamp}.txt"
             with open(download_filename, "w", encoding="utf-8") as f:
                 f.write("=" * 80 + "\n")
                 f.write("COMPLETE ML PIPELINE RESULTS\n")
-                f.write(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(
+                    f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                )
                 f.write("=" * 80 + "\n\n")
                 f.write(result_text)
                 f.write("\n\n" + "=" * 80 + "\n")
@@ -327,7 +333,7 @@ def run_model_prediction(model_directory, new_data_file):
         # Build command
         cmd = [
             sys.executable,
-            "predict_with_saved_model.py",
+            "src/predict_with_saved_model.py",
             f"./trained_models/{model_directory}",
             temp_file,
         ]
@@ -347,13 +353,16 @@ def run_model_prediction(model_directory, new_data_file):
         if result.returncode == 0:
             # Create downloadable results file
             from datetime import datetime
+
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             download_filename = f"prediction_results_{timestamp}.txt"
-            
+
             with open(download_filename, "w", encoding="utf-8") as f:
                 f.write("=" * 80 + "\n")
                 f.write("MODEL PREDICTION RESULTS\n")
-                f.write(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(
+                    f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                )
                 f.write(f"Model Directory: {model_directory}\n")
                 f.write("=" * 80 + "\n\n")
                 f.write(result.stdout)
@@ -361,8 +370,11 @@ def run_model_prediction(model_directory, new_data_file):
                     f.write("\n\nWarnings/Errors:\n")
                     f.write(result.stderr)
                 f.write("\n\n" + "=" * 80 + "\n")
-            
-            return f"Prediction Complete!\n\nOutput:\n{result.stdout[:2000]}", download_filename
+
+            return (
+                f"Prediction Complete!\n\nOutput:\n{result.stdout[:2000]}",
+                download_filename,
+            )
         else:
             return f"Prediction Failed:\n\nError: {result.stderr}", None
 
@@ -465,7 +477,7 @@ def get_trained_model_folders(models_dir="trained_models"):
 
         folders = []
         for item in Path(models_dir).iterdir():
-            if item.is_dir() and not item.name.startswith('.'):
+            if item.is_dir() and not item.name.startswith("."):
                 folders.append(item.name)
 
         return sorted(folders)
@@ -749,14 +761,15 @@ def create_clean_interface():
                     )
                 with gr.Column(scale=1):
                     model_directory = gr.Dropdown(
-                        choices=[], label="Selected Model Directory", 
-                        info="Select from trained model folders"
+                        choices=[],
+                        label="Selected Model Directory",
+                        info="Select from trained model folders",
                     )
 
             predict_btn = gr.Button("Make Predictions", variant="primary")
 
             prediction_output = gr.Textbox(label="Prediction Results", lines=15)
-            
+
             prediction_download = gr.File(label="Download Prediction Results (.txt)")
 
             # Load model folders for dropdown
@@ -840,7 +853,7 @@ def main():
     """Main entry point for the Gradio interface."""
 
     # Check that supporting files exist
-    required_files = ["eda.py", "eda_and_model.py"]
+    required_files = ["./src/eda.py", "./src/eda_and_model.py"]
     missing_files = []
 
     for file in required_files:
