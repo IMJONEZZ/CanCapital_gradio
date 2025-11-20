@@ -1,5 +1,0 @@
-﻿"Metric","Count (non‑null)","Mean","Std Dev","Min","25 %","Median","75 %","Max"
-"collection_case_days","2 629","75.5 days","174.9","0","1","5","27","1 198"
-"days_past_due","4 217","56.6 days","66.2","0","5","19","94","967"
-"no_missed_payments","4 217","9.6 payments","15.1","0","1","2","13","125"
-"pg_fico (borrower credit score)","4 216","702 points","227.9","483","659","693","730","9 003"

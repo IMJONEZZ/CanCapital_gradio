@@ -1,7 +1,0 @@
-﻿"Pair","Correlation","Why it makes sense"
-"contract_number ↔ funded_date","0.99","The contract ID encodes the funding date (e.g., sequential IDs)."
-"funded_date ↔ collection_case_open_date","0.90","Collection usually opens shortly after funding; the two timestamps move together."
-"contract_number ↔ collection_case_open_date","0.90","Same reason as above – ID carries a temporal component."
-"collection_case_open_date ↔ last_payment_date","0.81","The most recent payment tends to occur after the case is opened, and later open dates push the last‑payment date forward."
-"contract_number ↔ last_payment_date","0.77","Again a by‑product of the temporal ordering embedded in the ID."
-"funded_date ↔ last_payment_date","0.77","Loans funded later have later payment histories."
