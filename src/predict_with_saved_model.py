@@ -6,6 +6,8 @@ Model Prediction Script for CANCapital
 
 This script loads saved models and makes predictions on new data.
 Supports multiple model types from sklearn with automatic detection.
+
+Enhanced with robust currency formatting handling for financial datasets.
 """
 
 import json
@@ -160,38 +162,59 @@ def engineer_prediction_features(df):
 
 
 def preprocess_data(df, target_column=None):
-    """Preprocess data for prediction - with feature engineering."""
+    """Preprocess data for prediction - with enhanced currency handling."""
     try:
         import pandas as pd
-
+        
         print(f"Original data shape: {df.shape}")
 
-        # Apply feature engineering first
-        processed_df = engineer_prediction_features(df)
+        # Import currency utilities
+        try:
+            from src.currency_utils import enhanced_preprocess_for_prediction
+            
+            # Use the enhanced preprocessing pipeline
+            print("🔧 Using enhanced currency-aware preprocessing...")
+            
+            processed_df, preprocessor_report = enhanced_preprocess_for_prediction(df, target_column)
+            
+            # Print preprocessing summary
+            if preprocessor_report['currency_columns_detected']:
+                print(f"✅ Currency processing completed:")
+                print(f"   - Detected currency columns: {preprocessor_report['currency_columns_detected']}")
+                print(f"   - Converted values: {preprocessor_report['data_cleaning_summary'].get('total_values_converted', 0)}")
+            else:
+                print("ℹ️ No currency columns detected in this dataset")
+                
+        except ImportError as e:
+            print(f"⚠️ Enhanced currency utilities not available ({e})")
+            print("🔄 Falling back to standard preprocessing...")
+            
+            # Fallback: Apply feature engineering first
+            processed_df = engineer_prediction_features(df)
 
-        # Handle missing values - simple imputation for numeric columns
-        numeric_columns = processed_df.select_dtypes(include=["number"]).columns
-        for col in numeric_columns:
-            if processed_df[col].isnull().sum() > 0:
-                mean_value = processed_df[col].mean()
-                if pd.isna(mean_value):  # If still NaN, use a default
-                    mean_value = 0 if "age" in col.lower() else 50
-                processed_df.loc[:, col] = processed_df[col].fillna(mean_value)
-                print(
-                    f"Filled {processed_df[col].isnull().sum()} missing values in '{col}' with mean: {mean_value:.2f}"
-                )
+            # Handle missing values - simple imputation for numeric columns
+            numeric_columns = processed_df.select_dtypes(include=["number"]).columns
+            for col in numeric_columns:
+                if processed_df[col].isnull().sum() > 0:
+                    mean_value = processed_df[col].mean()
+                    if pd.isna(mean_value):  # If still NaN, use a default
+                        mean_value = 0 if "age" in col.lower() else 50
+                    processed_df.loc[:, col] = processed_df[col].fillna(mean_value)
+                    print(
+                        f"Filled {processed_df[col].isnull().sum()} missing values in '{col}' with mean: {mean_value:.2f}"
+                    )
 
-        # Handle categorical columns - simple approach
-        categorical_columns = processed_df.select_dtypes(
-            include=["object", "category"]
-        ).columns
-        for col in categorical_columns:
-            if processed_df[col].isnull().sum() > 0:
-                mode_value = processed_df[col].mode()
-                if len(mode_value) > 0:
-                    processed_df.loc[:, col] = processed_df[col].fillna(mode_value[0])
-                else:
-                    processed_df.loc[:, col] = processed_df[col].fillna("Unknown")
+            # Handle categorical columns - simple approach
+            categorical_columns = processed_df.select_dtypes(
+                include=["object", "category"]
+            ).columns
+            for col in categorical_columns:
+                if processed_df[col].isnull().sum() > 0:
+                    mode_value = processed_df[col].mode()
+                    if len(mode_value) > 0:
+                        processed_df.loc[:, col] = processed_df[col].fillna(mode_value[0])
+                    else:
+                        processed_df.loc[:, col] = processed_df[col].fillna("Unknown")
 
         # Remove target column if present (for prediction)
         if target_column and target_column in processed_df.columns:
@@ -205,6 +228,24 @@ def preprocess_data(df, target_column=None):
                 processed_df = processed_df.drop(columns=[col])
 
         print(f"Final processed data shape: {processed_df.shape}")
+        
+        # Final validation
+        numeric_cols = processed_df.select_dtypes(include=["number"]).columns.tolist()
+        non_numeric_cols = processed_df.select_dtypes(exclude=["number", "category"]).columns.tolist()
+        
+        # Exclude ID columns
+        id_columns = []
+        for col in processed_df.columns:
+            if any(keyword in col.lower() for keyword in ['id', 'loan_id']) and processed_df[col].dtype == 'object':
+                id_columns.append(col)
+        
+        remaining_non_numeric = [col for col in non_numeric_cols if col not in id_columns]
+        
+        if remaining_non_numeric:
+            print(f"⚠️ Warning: Non-numeric columns remain (will be excluded from modeling): {remaining_non_numeric}")
+            # Remove remaining non-numeric columns
+            processed_df = processed_df.drop(columns=remaining_non_numeric)
+        
         return processed_df
 
     except Exception as e:
@@ -365,7 +406,7 @@ def main():
     data_file = sys.argv[2]
 
     print("=" * 80)
-    print("CANCapital Model Prediction")
+    print("CANCapital Model Prediction - Enhanced with Currency Handling")
     print("=" * 80)
 
     # Load metadata
@@ -406,7 +447,17 @@ def main():
 
     # Preprocess data
     target_column = metadata.get("target_column")
-    processed_data = preprocess_data(df, target_column)
+    
+    try:
+        processed_data = preprocess_data(df, target_column)
+        
+        if processed_data is None or len(processed_data) == 0:
+            print("❌ Data preprocessing failed completely")
+            sys.exit(1)
+            
+    except Exception as e:
+        print(f"❌ Data preprocessing failed with error: {e}")
+        sys.exit(1)
 
     # Try to load and use the best model first
     predictions_made = False
@@ -510,6 +561,27 @@ def main():
 
     if not predictions_made:
         print("\n❌ No models could successfully make predictions on this data")
+        
+        # Additional debugging info
+        print("\n🔍 Debugging Information:")
+        try:
+            import pandas as pd
+            
+            df_debug = pd.read_csv(data_file, low_memory=False)
+            
+            print(f"Data file shape: {df_debug.shape}")
+            print(f"Columns with numeric dtype:")
+            for col in df_debug.select_dtypes(include=["number"]).columns:
+                print(f"  - {col}")
+            
+            print(f"\nColumns with object dtype (potential currency/formatted columns):")
+            for col in df_debug.select_dtypes(include=["object"]).columns:
+                sample_vals = df_debug[col].dropna().head(3).tolist()
+                print(f"  - {col}: Sample values = {sample_vals}")
+                
+        except Exception as debug_e:
+            print(f"Debug info failed: {debug_e}")
+            
         sys.exit(1)
 
     print(f"\n{'=' * 80}")
@@ -518,4 +590,3 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
