@@ -1,0 +1,58 @@
+================================================================================
+COMPLETE ML PIPELINE RESULTS
+Generated on: 2025-11-28 22:00:05
+================================================================================
+
+ML Pipeline Complete!
+
+Processing Summary:
+📊 Dataset shape: (4217, 30)
+✅ Using target column: 'collection_case_days'
+
+🎯 Auto-detecting target column...
+✅ Using target column: 'collection_case_days'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 TRAINED MODEL LOCATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your model has been saved to:
+  trained_models/model_20251128_220001/
+
+Files created:
+  • best_model.pkl - Trained model
+  • preprocessor.pkl - Feature transformer
+  • model_metadata.json - Training info
+  • feature_columns.txt - Features used
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+➡️ NEXT STEP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Go to the "Model Prediction" tab to:
+  1. Click "Scan for Models" to find your trained model
+  2. Upload new data for predictions
+  3. Select your model and make predictions
+
+
+================================================================================
+FULL PIPELINE OUTPUT:
+Loading temp_ml_data.csv …
+Shape: (4217, 30)
+📊 Dataset shape: (4217, 30)
+🔍 Auto-detecting column types...
+🔧 Engineering features...
+🎯 Auto-detecting target column...
+✅ Using target column: 'collection_case_days'
+
+=== Model performance ===
+LinearReg   → MAE: 19.17 | RMSLE: 1.5513 | R²: -0.002
+GradientBoost→ MAE: 9.97 | RMSLE: 0.7593 | R²: 0.577
+📁 Models saved to: trained_models/model_20251128_220001
+📁 Models saved to: trained_models/model_20251128_220001
+
+All artefacts written to: /Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/ml_results
+📁 Models saved to: trained_models
+
+
+================================================================================

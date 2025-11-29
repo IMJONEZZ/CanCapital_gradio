@@ -1,0 +1,35 @@
+================================================================================
+COMPLETE ML PIPELINE RESULTS
+Generated on: 2025-11-20 10:53:57
+================================================================================
+
+ML Pipeline Complete!
+
+Processing Summary:
+📊 Dataset shape: (4217, 30)
+✅ Using target column: 'collection_case_days'
+
+🎯 Auto-detecting target column...
+✅ Using target column: 'collection_case_days'
+
+================================================================================
+FULL PIPELINE OUTPUT:
+Loading temp_ml_data.csv …
+Shape: (4217, 30)
+📊 Dataset shape: (4217, 30)
+🔍 Auto-detecting column types...
+🔧 Engineering features...
+🎯 Auto-detecting target column...
+✅ Using target column: 'collection_case_days'
+
+=== Model performance ===
+LinearReg   → MAE: 19.17 | RMSLE: 1.5513 | R²: -0.002
+GradientBoost→ MAE: 9.97 | RMSLE: 0.7593 | R²: 0.577
+📁 Models saved to: trained_models/model_20251120_105353
+📁 Models saved to: trained_models/model_20251120_105353
+
+All artefacts written to: /Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/ml_results
+📁 Models saved to: trained_models
+
+
+================================================================================

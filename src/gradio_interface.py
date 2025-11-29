@@ -79,6 +79,107 @@ def run_eda_analysis(csv_file_path):
         return error_msg, None
 
 
+def update_eda_button_state(file_path):
+    """Enable/disable Run button based on file upload status."""
+    if file_path and Path(file_path).exists():
+        return (
+            gr.Button(interactive=True, elem_classes=[]),
+            '<span class="status-badge status-ready">✓ File ready</span>'
+        )
+    else:
+        return (
+            gr.Button(interactive=False, elem_classes=["eda-btn-disabled"]),
+            '<span class="status-badge status-pending">No file uploaded</span>'
+        )
+
+
+def update_ml_button_state(file_path, columns_loaded):
+    """Enable/disable ML Run button based on file + columns state."""
+    if file_path and columns_loaded:
+        return (
+            gr.Button(interactive=True, elem_classes=[]),
+            '<span class="status-badge status-ready">✓ Ready to train</span>'
+        )
+    elif file_path:
+        return (
+            gr.Button(interactive=False, elem_classes=["eda-btn-disabled"]),
+            '<span class="status-badge status-pending">Load columns first</span>'
+        )
+    else:
+        return (
+            gr.Button(interactive=False, elem_classes=["eda-btn-disabled"]),
+            '<span class="status-badge status-pending">Upload file first</span>'
+        )
+
+
+def reset_ml_state(file_path):
+    """Reset ML state when file changes - columns need reloading."""
+    if file_path and Path(file_path).exists():
+        return (
+            gr.Button(interactive=False, elem_classes=["eda-btn-disabled"]),
+            '<span class="status-badge status-pending">Load columns first</span>',
+            False  # columns_loaded = False
+        )
+    else:
+        return (
+            gr.Button(interactive=False, elem_classes=["eda-btn-disabled"]),
+            '<span class="status-badge status-pending">Upload file first</span>',
+            False  # columns_loaded = False
+        )
+
+
+def update_prediction_button_state(model_selected, file_uploaded):
+    """Enable/disable Predict button based on model + file state."""
+    if model_selected and file_uploaded:
+        return (
+            gr.Button(interactive=True, elem_classes=[]),
+            '<span class="status-badge status-ready">✓ Ready to predict</span>'
+        )
+    elif model_selected:
+        return (
+            gr.Button(interactive=False, elem_classes=["eda-btn-disabled"]),
+            '<span class="status-badge status-pending">Upload data file</span>'
+        )
+    elif file_uploaded:
+        return (
+            gr.Button(interactive=False, elem_classes=["eda-btn-disabled"]),
+            '<span class="status-badge status-pending">Select a model</span>'
+        )
+    else:
+        return (
+            gr.Button(interactive=False, elem_classes=["eda-btn-disabled"]),
+            '<span class="status-badge status-pending">Select model and upload file</span>'
+        )
+
+
+def update_prediction_file_state(file_path):
+    """Update file upload state and status badge."""
+    if file_path and Path(file_path).exists():
+        return (
+            True,
+            '<span class="status-badge status-ready">✓ File uploaded</span>'
+        )
+    else:
+        return (
+            False,
+            '<span class="status-badge status-pending">No file uploaded</span>'
+        )
+
+
+def update_model_selection_state(model_name):
+    """Update model selection state and status badge."""
+    if model_name:
+        return (
+            True,
+            f'<span class="status-badge status-ready">✓ {model_name}</span>'
+        )
+    else:
+        return (
+            False,
+            '<span class="status-badge status-pending">No model selected</span>'
+        )
+
+
 def run_ml_pipeline(csv_file_path, target_column=None, output_dir="ml_results"):
     """Run the enhanced ML pipeline."""
     try:
@@ -246,10 +347,42 @@ Don't force ML Pipeline on incompatible datasets
                 if warnings:
                     result_text += f"\n\nAdditional Info:\n" + "\n".join(warnings[:3])
 
-            # Create downloadable text file
+            # Add model location info to result
             from datetime import datetime
-
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+            # Find the most recent model folder
+            trained_models_dir = Path("trained_models")
+            model_folder_name = "model_" + timestamp[:8]  # YYYYMMDD prefix
+            if trained_models_dir.exists():
+                model_folders = sorted(trained_models_dir.iterdir(), key=lambda x: x.name, reverse=True)
+                if model_folders:
+                    model_folder_name = model_folders[0].name
+
+            result_text += f"""
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 TRAINED MODEL LOCATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your model has been saved to:
+  trained_models/{model_folder_name}/
+
+Files created:
+  • best_model.pkl - Trained model
+  • preprocessor.pkl - Feature transformer
+  • model_metadata.json - Training info
+  • feature_columns.txt - Features used
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+➡️ NEXT STEP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Go to the "Model Prediction" tab to:
+  1. Click "Scan for Models" to find your trained model
+  2. Upload new data for predictions
+  3. Select your model and make predictions
+"""
             download_filename = f"ml_pipeline_results_{timestamp}.txt"
             with open(download_filename, "w", encoding="utf-8") as f:
                 f.write("=" * 80 + "\n")
@@ -330,7 +463,7 @@ def run_model_prediction(model_directory, new_data_file):
         temp_file = "temp_prediction_data.csv"
         shutil.copy2(new_data_file, temp_file)
 
-        # Build command
+        # Build command with PYTHONPATH to enable src imports
         cmd = [
             sys.executable,
             "src/predict_with_saved_model.py",
@@ -338,12 +471,19 @@ def run_model_prediction(model_directory, new_data_file):
             temp_file,
         ]
 
+        # Set up environment with PYTHONPATH
+        import os
+        env = os.environ.copy()
+        env['PYTHONPATH'] = str(Path.cwd())
+
         # Run prediction
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
             timeout=300,  # 5 minutes
+            cwd=Path.cwd(),  # Explicitly set working directory
+            env=env,  # Pass environment with PYTHONPATH
         )
 
         # Clean up temp file
@@ -376,7 +516,21 @@ def run_model_prediction(model_directory, new_data_file):
                 download_filename,
             )
         else:
-            return f"Prediction Failed:\n\nError: {result.stderr}", None
+            # Enhanced error reporting
+            error_msg = f"Prediction Failed:\n\n"
+            error_msg += f"Return Code: {result.returncode}\n\n"
+
+            if result.stderr:
+                error_msg += f"STDERR:\n{result.stderr}\n\n"
+            else:
+                error_msg += "STDERR: (empty)\n\n"
+
+            if result.stdout:
+                error_msg += f"STDOUT:\n{result.stdout}"  # Show all output
+            else:
+                error_msg += "STDOUT: (empty)"
+
+            return error_msg, None
 
     except subprocess.TimeoutExpired:
         return "Prediction timed out (5 minutes limit)", None
@@ -492,7 +646,9 @@ def create_clean_interface():
     # Custom CSS for dark mode appearance
     css = """
     .gradio-container {
+        width: 1200px !important;
         max-width: 1200px !important;
+        min-width: 1200px !important;
         margin: auto !important;
     }
 
@@ -590,6 +746,177 @@ def create_clean_interface():
 
     .success { color: #2ecc71; }
     .error { color: #e74c3c; }
+
+    /* ===== TAB 1: BOLD VISUAL HIERARCHY ===== */
+
+    /* Step container with colored left border */
+    .eda-step {
+        position: relative;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        border-left: 5px solid;
+        background-color: #34495e !important;
+    }
+
+    .eda-step-1 { border-left-color: #3498db !important; }
+    .eda-step-2 { border-left-color: #9b59b6 !important; }
+    .eda-step-3 { border-left-color: #2ecc71 !important; }
+
+    /* Numbered step badges */
+    .step-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-weight: bold;
+        font-size: 16px;
+        margin-right: 12px;
+        color: white !important;
+    }
+
+    .step-number-1 { background-color: #3498db !important; }
+    .step-number-2 { background-color: #9b59b6 !important; }
+    .step-number-3 { background-color: #2ecc71 !important; }
+
+    .step-title {
+        font-size: 1.2em;
+        font-weight: 600;
+        color: #ecf0f1 !important;
+    }
+
+    /* Visual connector arrow */
+    .step-connector {
+        text-align: center;
+        padding: 8px 0;
+        color: #7f8c8d !important;
+        font-size: 20px;
+    }
+
+    /* Status badges */
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.85em;
+        font-weight: 500;
+        margin-top: 10px;
+    }
+
+    .status-pending {
+        background-color: rgba(231, 76, 60, 0.2) !important;
+        color: #e74c3c !important;
+        border: 1px solid #e74c3c;
+    }
+
+    .status-ready {
+        background-color: rgba(46, 204, 113, 0.2) !important;
+        color: #2ecc71 !important;
+        border: 1px solid #2ecc71;
+    }
+
+    /* Disabled button state */
+    .eda-btn-disabled {
+        background-color: #5a6d7e !important;
+        color: #95a5a6 !important;
+        cursor: not-allowed !important;
+        opacity: 0.6 !important;
+    }
+
+    /* Helper text styling */
+    .eda-helper-text {
+        background-color: #2c3e50;
+        padding: 12px 15px;
+        border-radius: 5px;
+        border-left: 3px solid #f39c12;
+        margin-top: 15px;
+    }
+
+    .eda-helper-text code {
+        background: rgba(52, 152, 219, 0.2);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: monospace;
+    }
+
+    /* ===== TAB 2: ML PIPELINE VISUAL HIERARCHY ===== */
+
+    /* ML Pipeline step containers - reuse eda-step base styling */
+    .ml-step {
+        position: relative;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        border-left: 5px solid;
+        background-color: #34495e !important;
+    }
+
+    .ml-step-1 { border-left-color: #3498db !important; }  /* Blue - Upload */
+    .ml-step-2 { border-left-color: #9b59b6 !important; }  /* Purple - Configure */
+    .ml-step-3 { border-left-color: #e67e22 !important; }  /* Orange - Train */
+    .ml-step-4 { border-left-color: #2ecc71 !important; }  /* Green - Results */
+
+    /* Step number background for step 4 */
+    .step-number-4 { background-color: #2ecc71 !important; }
+
+    /* ML-specific helper styles */
+    .ml-time-estimate {
+        color: #7f8c8d;
+        font-size: 0.85em;
+        margin-top: 10px;
+    }
+
+    .ml-next-steps {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 15px;
+    }
+
+    .ml-next-steps p {
+        margin: 0;
+        color: white !important;
+    }
+
+    /* Columns loaded status badge */
+    .status-columns-loaded {
+        background-color: rgba(155, 89, 182, 0.2) !important;
+        color: #9b59b6 !important;
+        border: 1px solid #9b59b6;
+    }
+
+    /* ML helper text - orange accent like EDA */
+    .ml-helper-text {
+        background-color: #2c3e50;
+        padding: 12px 15px;
+        border-radius: 5px;
+        border-left: 3px solid #f39c12;
+        margin-top: 15px;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .ml-helper-text code {
+        background: rgba(52, 152, 219, 0.2);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: monospace;
+    }
+
+    /* ===== TAB 3: PREDICTION VISUAL HIERARCHY ===== */
+
+    /* Prediction step colors - reuse eda-step base */
+    .pred-step-1 { border-left-color: #3498db !important; }  /* Blue - Select Model */
+    .pred-step-2 { border-left-color: #9b59b6 !important; }  /* Purple - Upload Data */
+    .pred-step-3 { border-left-color: #2ecc71 !important; }  /* Green - Predictions */
     """
 
     with gr.Blocks(css=css, title="CANCapital EDA & Modeling Interface") as interface:
@@ -601,185 +928,505 @@ def create_clean_interface():
         </div>
         """)
 
-        # Tab 1: Basic EDA
+        # Tab 1: Basic EDA - Bold Visual Hierarchy Design
         with gr.Tab("Basic EDA Analysis"):
             gr.HTML('<div class="tab-header">Exploratory Data Analysis</div>')
 
-            # Universal compatibility notice
-            gr.HTML("""
-            <div style="background-color: #34495e; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #3498db;">
-                <h4 style="margin-top: 0; color: #ecf0f1;">Universal Dataset Compatibility</h4>
-                <p style="margin-bottom: 5px; color: #ecf0f1;"><strong>Basic EDA works with ANY dataset format:</strong></p>
-                <ul style="margin: 5px 0; color: #ecf0f1;">
-                    <li>Financial data, sales records, customer analytics</li>
-                    <li>Scientific research, survey responses, sensor data</li>
-                    <li>Any CSV with mixed column types (numbers, dates, text)</li>
-                </ul>
-                <p style="margin-bottom: 0; color: #ecf0f1;"><strong>Perfect for:</strong> First-time data exploration, understanding your dataset structure, identifying patterns and relationships</p>
+            # ===== STEP 1: UPLOAD =====
+            gr.HTML('''
+            <div class="step-header">
+                <span class="step-number step-number-1">1</span>
+                <span class="step-title">Upload Your Data</span>
             </div>
-            """)
+            ''')
 
-            with gr.Row():
-                with gr.Column(scale=1):
-                    eda_file = gr.File(
-                        label="Upload CSV Dataset (Any Format)", file_types=[".csv"]
-                    )
-                with gr.Column(scale=1):
-                    eda_run_btn = gr.Button("Run EDA Analysis", variant="primary")
+            with gr.Group(elem_classes=["eda-step", "eda-step-1"]):
+                gr.HTML('<p style="color: #bdc3c7; margin: 0 0 15px 0;">Upload any CSV file for comprehensive statistical analysis.</p>')
 
-            eda_output = gr.Textbox(
-                label="EDA Results",
-                lines=20,
-                placeholder="Upload a CSV file and click 'Run EDA Analysis' to see results here...",
+                eda_file = gr.File(
+                    label="CSV Dataset",
+                    file_types=[".csv"]
+                )
+
+                file_status = gr.HTML(
+                    value='<span class="status-badge status-pending">No file uploaded</span>'
+                )
+
+            # Connector
+            gr.HTML('<div class="step-connector">↓</div>')
+
+            # ===== STEP 2: ANALYZE =====
+            gr.HTML('''
+            <div class="step-header">
+                <span class="step-number step-number-2">2</span>
+                <span class="step-title">Run Analysis</span>
+            </div>
+            ''')
+
+            with gr.Group(elem_classes=["eda-step", "eda-step-2"]):
+                gr.HTML('<p style="color: #bdc3c7; margin: 0 0 15px 0;">Generates statistics, correlations, and 6 visualization plots.</p>')
+
+                eda_run_btn = gr.Button(
+                    "Run EDA Analysis",
+                    variant="primary",
+                    interactive=False,
+                    elem_classes=["eda-btn-disabled"]
+                )
+
+                gr.HTML('<p style="color: #7f8c8d; font-size: 0.85em; margin-top: 10px;">⏱️ Analysis typically takes 10-60 seconds depending on dataset size.</p>')
+
+            # Connector
+            gr.HTML('<div class="step-connector">↓</div>')
+
+            # ===== STEP 3: RESULTS =====
+            gr.HTML('''
+            <div class="step-header">
+                <span class="step-number step-number-3">3</span>
+                <span class="step-title">View Results</span>
+            </div>
+            ''')
+
+            with gr.Group(elem_classes=["eda-step", "eda-step-3"]):
+                eda_output = gr.Textbox(
+                    label="Analysis Results",
+                    lines=20,
+                    placeholder="""📋 How to use this tab:
+
+Step 1: Upload your CSV file above
+Step 2: Click 'Run EDA Analysis' to start
+Step 3: Results appear here • Plots saved to eda_plots/ folder
+
+Supports any CSV format - financial data, research data, surveys, and more."""
+                )
+
+                eda_download = gr.File(label="Download Report (.txt)")
+
+                # Plot location helper text
+                gr.HTML('''
+                <div class="eda-helper-text">
+                    <strong style="color: #f39c12;">📊 Visualizations:</strong>
+                    <span style="color: #bdc3c7;">
+                        6 PNG plots are saved to <code>eda_plots/</code> folder
+                        (distributions, box plots, correlations, scatter plots, pairplot)
+                    </span>
+                </div>
+                ''')
+
+            # ===== EVENT HANDLERS =====
+            eda_file.change(
+                fn=update_eda_button_state,
+                inputs=[eda_file],
+                outputs=[eda_run_btn, file_status]
             )
 
-            eda_download = gr.File(label="Download Complete Results (.txt)")
-
-            # Connect EDA button
             eda_run_btn.click(
                 fn=run_eda_analysis,
                 inputs=[eda_file],
-                outputs=[eda_output, eda_download],
+                outputs=[eda_output, eda_download]
             )
 
-        # Tab 2: ML Pipeline
+        # Tab 2: ML Pipeline - Bold Visual Hierarchy Design (4 Steps)
         with gr.Tab("Machine Learning Pipeline"):
-            gr.HTML(
-                '<div class="tab-header">Full ML Pipeline with Model Training</div>'
-            )
+            gr.HTML('<div class="tab-header">Full ML Pipeline with Model Training</div>')
 
-            # Dataset compatibility warning
-            gr.HTML("""
-            <div style="background-color: #e67e22; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #d35400;">
-                <h4 style="margin-top: 0; color: #ecf0f1;">Dataset Compatibility Notice</h4>
-                <p style="margin-bottom: 0; color: #ecf0f1;"><strong>ML Pipeline works best with loan collection datasets</strong> containing these columns:</p>
-                <ul style="margin: 10px 0; color: #ecf0f1;">
-                    <li><code>funded_date</code> (required for chronological data split)</li>
-                    <li><code>collection_case_days</code>, <code>collection_case_close_date</code></li>
-                    <li><code>last_payment_date</code>, <code>pg_date_of_birth</code></li>
-                    <li><code>demand_letter_sent_date</code>, <code>collection_case_open_date</code></li>
-                </ul>
-                <p style="margin-bottom: 0; color: #ecf0f1;"><strong>For other datasets:</strong> Use Basic EDA tab for analysis</p>
+            # Dataset compatibility - collapsible accordion (less alarming)
+            with gr.Accordion("Dataset Requirements (click to expand)", open=False):
+                gr.HTML("""
+                <div style="padding: 10px; color: #bdc3c7;">
+                    <p><strong>This pipeline is optimized for loan collection datasets.</strong></p>
+                    <p><strong>Required:</strong> <code>funded_date</code> (for chronological data split)</p>
+                    <p><strong>Optional but expected:</strong></p>
+                    <ul style="margin: 5px 0;">
+                        <li><code>collection_case_days</code>, <code>collection_case_close_date</code></li>
+                        <li><code>last_payment_date</code>, <code>pg_date_of_birth</code></li>
+                        <li><code>demand_letter_sent_date</code>, <code>collection_case_open_date</code></li>
+                    </ul>
+                    <p style="color: #f39c12;"><strong>For other datasets:</strong> Use the Basic EDA tab instead.</p>
+                </div>
+                """)
+
+            # State for tracking columns loaded
+            columns_loaded_state = gr.State(False)
+
+            # ===== STEP 1: UPLOAD =====
+            gr.HTML('''
+            <div class="step-header">
+                <span class="step-number step-number-1">1</span>
+                <span class="step-title">Upload Dataset</span>
             </div>
-            """)
+            ''')
 
-            with gr.Row():
-                with gr.Column(scale=1):
-                    ml_file = gr.File(
-                        label="Upload CSV Dataset (Loan Collection Format)",
-                        file_types=[".csv"],
-                    )
-                with gr.Column(scale=1):
-                    output_directory = gr.Textbox(
-                        value="ml_results", label="Output Directory"
-                    )
+            with gr.Group(elem_classes=["ml-step", "ml-step-1"]):
+                gr.HTML('<p style="color: #bdc3c7; margin: 0 0 15px 0;">Upload a CSV file with loan collection data.</p>')
 
-            with gr.Row():
-                target_column = gr.Dropdown(
-                    choices=[], label="Target Column (Optional - Auto-detect if empty)"
+                ml_file = gr.File(
+                    label="CSV Dataset (Loan Collection Format)",
+                    file_types=[".csv"]
                 )
 
-                # Button to populate target column dropdown
-                get_cols_btn = gr.Button("Load Columns")
+                ml_file_status = gr.HTML(
+                    value='<span class="status-badge status-pending">No file uploaded</span>'
+                )
 
-            ml_run_btn = gr.Button("Run ML Pipeline", variant="primary")
+            # Connector
+            gr.HTML('<div class="step-connector">↓</div>')
 
-            ml_output = gr.Textbox(
-                label="Pipeline Results",
-                lines=20,
-                placeholder="Configure options and click 'Run ML Pipeline'...",
-            )
-
-            ml_download = gr.File(label="Download Complete Results (.txt)")
-
-            # Add compatibility checker info
-            gr.HTML("""
-            <div style="background-color: #27ae60; padding: 10px; border-radius: 5px; margin-top: 10px;">
-                <p style="margin: 0; color: #ecf0f1;"><strong>Compatibility Check:</strong> The interface now automatically checks if your dataset is compatible with the ML pipeline requirements!</p>
+            # ===== STEP 2: CONFIGURE =====
+            gr.HTML('''
+            <div class="step-header">
+                <span class="step-number step-number-2">2</span>
+                <span class="step-title">Configure Pipeline</span>
             </div>
-            """)
+            ''')
 
-            # Load columns for target selection
-            def update_target_options(file_path):
+            with gr.Group(elem_classes=["ml-step", "ml-step-2"]):
+                # ===== Sub-step 2a: Validate Dataset =====
+                gr.HTML('''
+                <p style="color: #9b59b6; font-weight: 600; margin: 0 0 8px 0;">
+                    2a. Validate Dataset
+                </p>
+                <p style="color: #95a5a6; font-size: 0.85em; margin: 0 0 10px 0;">
+                    Checks compatibility and loads column names from your CSV.
+                </p>
+                ''')
+
+                get_cols_btn = gr.Button("Validate & Load Columns", variant="primary")
+
+                ml_columns_status = gr.HTML(
+                    value='<span class="status-badge status-pending">Not validated yet</span>'
+                )
+
+                # Divider between sub-steps
+                gr.HTML('<hr style="border: none; border-top: 1px solid #4a5568; margin: 15px 0;">')
+
+                # ===== Sub-step 2b: Select Target =====
+                gr.HTML('''
+                <p style="color: #9b59b6; font-weight: 600; margin: 0 0 8px 0;">
+                    2b. Select Target <span style="color: #95a5a6; font-weight: normal;">(Optional)</span>
+                </p>
+                ''')
+
+                target_column = gr.Dropdown(
+                    choices=[],
+                    label="Target Column",
+                    interactive=False  # Disabled until columns loaded
+                )
+
+                gr.HTML('''
+                <p style="color: #7f8c8d; font-size: 0.85em; margin: 8px 0 0 0;">
+                    ℹ️ Leave empty to auto-detect. Looks for <code>collection_case_days</code> or similar.
+                </p>
+                ''')
+
+                # Advanced options - collapsed
+                with gr.Accordion("Advanced Options", open=False):
+                    output_directory = gr.Textbox(
+                        value="ml_results",
+                        label="Output Directory"
+                    )
+
+            # Connector
+            gr.HTML('<div class="step-connector">↓</div>')
+
+            # ===== STEP 3: TRAIN =====
+            gr.HTML('''
+            <div class="step-header">
+                <span class="step-number step-number-3">3</span>
+                <span class="step-title">Train Models</span>
+            </div>
+            ''')
+
+            with gr.Group(elem_classes=["ml-step", "ml-step-3"]):
+                gr.HTML('<p style="color: #bdc3c7; margin: 0 0 15px 0;">Train multiple ML models and select the best performer.</p>')
+
+                ml_run_btn = gr.Button(
+                    "Run ML Pipeline",
+                    variant="primary",
+                    interactive=False,
+                    elem_classes=["eda-btn-disabled"]
+                )
+
+                ml_run_status = gr.HTML(
+                    value='<span class="status-badge status-pending">Upload file first</span>'
+                )
+
+                gr.HTML('''
+                <p class="ml-time-estimate">
+                    ⏱️ Pipeline typically takes <strong>1-10 minutes</strong> depending on dataset size.<br>
+                    Do not refresh the page during processing.
+                </p>
+                ''')
+
+            # Connector
+            gr.HTML('<div class="step-connector">↓</div>')
+
+            # ===== STEP 4: RESULTS =====
+            gr.HTML('''
+            <div class="step-header">
+                <span class="step-number step-number-4">4</span>
+                <span class="step-title">Results & Next Steps</span>
+            </div>
+            ''')
+
+            with gr.Group(elem_classes=["ml-step", "ml-step-4"]):
+                ml_output = gr.Textbox(
+                    label="Pipeline Results",
+                    lines=20,
+                    placeholder="""📋 How to use this tab:
+
+Step 1: Upload your loan collection CSV file
+Step 2: Click 'Validate & Load Columns' to check compatibility
+Step 3: (Optional) Select a target column or leave empty to auto-detect
+Step 4: Click 'Run ML Pipeline' to train models
+Step 5: View results here • Model saved to trained_models/ folder
+
+Note: This pipeline requires 'funded_date' column for time-based data splitting."""
+                )
+
+                ml_download = gr.File(label="Download Complete Results (.txt)")
+
+                # Model location helper text
+                gr.HTML('''
+                <div class="ml-helper-text">
+                    <strong style="color: #f39c12;">📁 Trained Model Location:</strong>
+                    <span style="color: #bdc3c7;">
+                        After training, your model is saved to <code>trained_models/model_YYYYMMDD_HHMMSS/</code>
+                        including <code>best_model.pkl</code>, <code>preprocessor.pkl</code>, and <code>model_metadata.json</code>
+                    </span>
+                </div>
+                ''')
+
+                # Next steps guidance
+                gr.HTML('''
+                <div class="ml-next-steps">
+                    <p><strong>✅ Next Step:</strong> After training completes, go to the <strong>"Model Prediction"</strong> tab to make predictions on new data.</p>
+                </div>
+                ''')
+
+            # ===== EVENT HANDLERS =====
+
+            # Helper function for column loading with state update
+            def update_target_options_with_state(file_path):
+                """Load columns and update state with rich feedback."""
                 if file_path:
                     columns = get_csv_columns(file_path)
-
-                    # Add compatibility info
                     compatibility = check_ml_pipeline_compatibility(file_path)
+                    col_count = len(columns) if columns else 0
+
+                    # Check for auto-detectable target column
+                    auto_target = None
+                    target_hints = ['collection_case_days', 'target', 'label', 'y']
+                    for col in columns or []:
+                        col_lower = col.lower()
+                        if any(hint in col_lower for hint in target_hints):
+                            auto_target = col
+                            break
 
                     if not compatibility["compatible"]:
+                        missing = ', '.join(compatibility.get('missing_required', []))
+                        status = f'<span class="status-badge status-columns-loaded">⚠️ {col_count} columns (missing: {missing})</span>'
                         return (
                             gr.update(
                                 choices=columns,
                                 value=None,
-                                info=f"Warning: Dataset may not be compatible with ML Pipeline. Missing: {', '.join(compatibility.get('missing_required', []))}",
-                            )
-                            if columns
-                            else gr.update(choices=[], value=None)
+                                interactive=True
+                            ) if columns else gr.update(choices=[], value=None, interactive=False),
+                            True,  # columns_loaded = True (even if warning)
+                            status
                         )
 
-                    return (
-                        gr.update(choices=columns, value=None)
-                        if columns
-                        else gr.update(choices=[], value=None)
-                    )
-                return gr.update(choices=[], value=None)
+                    # Build success status with column count and auto-detect info
+                    status_parts = [f"✓ {col_count} columns"]
+                    if auto_target:
+                        status_parts.append(f"Auto-detect: {auto_target}")
+                    status = f'<span class="status-badge status-columns-loaded">{" • ".join(status_parts)}</span>'
 
-            get_cols_btn.click(
-                fn=update_target_options, inputs=[ml_file], outputs=[target_column]
+                    return (
+                        gr.update(choices=columns, value=None, interactive=True) if columns else gr.update(choices=[], value=None, interactive=False),
+                        True,  # columns_loaded = True
+                        status
+                    )
+                return (
+                    gr.update(choices=[], value=None, interactive=False),
+                    False,
+                    '<span class="status-badge status-pending">Upload a file first</span>'
+                )
+
+            # File upload changes - reset state
+            ml_file.change(
+                fn=reset_ml_state,
+                inputs=[ml_file],
+                outputs=[ml_run_btn, ml_run_status, columns_loaded_state]
             )
 
-            # Connect ML pipeline button
+            # Also update file status badge
+            ml_file.change(
+                fn=lambda f: '<span class="status-badge status-ready">✓ File uploaded</span>' if f else '<span class="status-badge status-pending">No file uploaded</span>',
+                inputs=[ml_file],
+                outputs=[ml_file_status]
+            )
+
+            # Load columns button
+            get_cols_btn.click(
+                fn=update_target_options_with_state,
+                inputs=[ml_file],
+                outputs=[target_column, columns_loaded_state, ml_columns_status]
+            )
+
+            # Update run button when columns state changes
+            columns_loaded_state.change(
+                fn=update_ml_button_state,
+                inputs=[ml_file, columns_loaded_state],
+                outputs=[ml_run_btn, ml_run_status]
+            )
+
+            # Run ML pipeline button
             ml_run_btn.click(
                 fn=run_ml_pipeline,
                 inputs=[ml_file, target_column, output_directory],
-                outputs=[ml_output, ml_download],
+                outputs=[ml_output, ml_download]
             )
 
-        # Tab 3: Model Prediction
+        # Tab 3: Model Prediction - Bold Visual Hierarchy Design (3 Steps)
         with gr.Tab("Model Prediction"):
             gr.HTML('<div class="tab-header">Use Saved Models for Predictions</div>')
 
-            with gr.Row():
-                with gr.Column(scale=1):
-                    models_dir = gr.Textbox(
-                        value="trained_models", label="Models Directory Path"
-                    )
-                with gr.Column(scale=1):
-                    scan_btn = gr.Button("Scan for Models")
+            # State for tracking selections
+            model_selected_state = gr.State(False)
+            file_uploaded_state = gr.State(False)
 
-            scan_output = gr.Textbox(
-                label="Available Models",
-                lines=8,
-                placeholder="Enter models directory and click 'Scan for Models'...",
-            )
+            # ===== STEP 1: SELECT MODEL =====
+            gr.HTML('''
+            <div class="step-header">
+                <span class="step-number step-number-1">1</span>
+                <span class="step-title">Select Model</span>
+            </div>
+            ''')
 
-            with gr.Row():
-                with gr.Column(scale=1):
-                    prediction_file = gr.File(
-                        label="Upload New Data (CSV)", file_types=[".csv"]
-                    )
-                with gr.Column(scale=1):
-                    model_directory = gr.Dropdown(
-                        choices=[],
-                        label="Selected Model Directory",
-                        info="Select from trained model folders",
-                    )
+            with gr.Group(elem_classes=["eda-step", "pred-step-1"]):
+                gr.HTML('<p style="color: #bdc3c7; margin: 0 0 15px 0;">Choose a trained model from the ML Pipeline tab.</p>')
 
-            predict_btn = gr.Button("Make Predictions", variant="primary")
+                model_directory = gr.Dropdown(
+                    choices=[],
+                    label="Trained Model",
+                    info="Models are auto-loaded from trained_models/"
+                )
 
-            prediction_output = gr.Textbox(label="Prediction Results", lines=15)
+                model_status = gr.HTML(
+                    value='<span class="status-badge status-pending">No model selected</span>'
+                )
 
-            prediction_download = gr.File(label="Download Prediction Results (.txt)")
+                # Empty state guidance
+                gr.HTML('''
+                <p style="color: #7f8c8d; font-size: 0.85em; margin: 10px 0 0 0;">
+                    ℹ️ No models available? Train one in the <strong>ML Pipeline</strong> tab first.
+                </p>
+                ''')
 
-            # Load model folders for dropdown
+                # Advanced: Models directory (rarely needed)
+                with gr.Accordion("Advanced Options", open=False):
+                    models_dir = gr.Textbox(value="trained_models", label="Models Directory Path")
+                    scan_btn = gr.Button("Rescan Directory", variant="secondary")
+                    scan_output = gr.Textbox(label="Scan Results", lines=4)
+
+            # Connector
+            gr.HTML('<div class="step-connector">↓</div>')
+
+            # ===== STEP 2: UPLOAD DATA =====
+            gr.HTML('''
+            <div class="step-header">
+                <span class="step-number step-number-2">2</span>
+                <span class="step-title">Upload New Data</span>
+            </div>
+            ''')
+
+            with gr.Group(elem_classes=["eda-step", "pred-step-2"]):
+                gr.HTML('<p style="color: #bdc3c7; margin: 0 0 15px 0;">Upload a CSV file with the same format as your training data.</p>')
+
+                prediction_file = gr.File(
+                    label="CSV Data for Predictions",
+                    file_types=[".csv"]
+                )
+
+                file_status = gr.HTML(
+                    value='<span class="status-badge status-pending">No file uploaded</span>'
+                )
+
+            # Connector
+            gr.HTML('<div class="step-connector">↓</div>')
+
+            # ===== STEP 3: GET PREDICTIONS =====
+            gr.HTML('''
+            <div class="step-header">
+                <span class="step-number step-number-3">3</span>
+                <span class="step-title">Get Predictions</span>
+            </div>
+            ''')
+
+            with gr.Group(elem_classes=["eda-step", "pred-step-3"]):
+                predict_btn = gr.Button(
+                    "Make Predictions",
+                    variant="primary",
+                    interactive=False,
+                    elem_classes=["eda-btn-disabled"]
+                )
+
+                predict_status = gr.HTML(
+                    value='<span class="status-badge status-pending">Select model and upload file first</span>'
+                )
+
+                prediction_output = gr.Textbox(
+                    label="Prediction Results",
+                    lines=15,
+                    placeholder="""📋 How to use this tab:
+
+Step 1: Select a trained model from the dropdown above
+Step 2: Upload a CSV file with new data to predict
+Step 3: Click 'Make Predictions' to generate results
+
+Models are automatically loaded from trained_models/ folder.
+No models? Train one in the ML Pipeline tab first."""
+                )
+
+                prediction_download = gr.File(label="Download Predictions (.csv)")
+
+            # ===== EVENT HANDLERS =====
+
+            # Load model folders for dropdown on page load
             def populate_model_folders():
                 return gr.update(choices=get_trained_model_folders())
 
-            # Populate model dropdown on page load
             interface.load(fn=populate_model_folders, outputs=[model_directory])
 
-            # Connect scan button
+            # Model dropdown change - update state and status
+            model_directory.change(
+                fn=update_model_selection_state,
+                inputs=[model_directory],
+                outputs=[model_selected_state, model_status]
+            )
+
+            # File upload change - update state and status
+            prediction_file.change(
+                fn=update_prediction_file_state,
+                inputs=[prediction_file],
+                outputs=[file_uploaded_state, file_status]
+            )
+
+            # Update predict button when model state changes
+            model_selected_state.change(
+                fn=update_prediction_button_state,
+                inputs=[model_selected_state, file_uploaded_state],
+                outputs=[predict_btn, predict_status]
+            )
+
+            # Update predict button when file state changes
+            file_uploaded_state.change(
+                fn=update_prediction_button_state,
+                inputs=[model_selected_state, file_uploaded_state],
+                outputs=[predict_btn, predict_status]
+            )
+
+            # Connect scan button (in Advanced accordion)
             scan_btn.click(
                 fn=scan_for_models, inputs=[models_dir], outputs=[scan_output]
             )
@@ -788,7 +1435,7 @@ def create_clean_interface():
             predict_btn.click(
                 fn=run_model_prediction,
                 inputs=[model_directory, prediction_file],
-                outputs=[prediction_output, prediction_download],
+                outputs=[prediction_output, prediction_download]
             )
 
         # Tab 4: Help & Instructions

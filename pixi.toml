@@ -2,7 +2,7 @@
 authors = ["IMJONEZZ <46764336+IMJONEZZ@users.noreply.github.com>"]
 channels = ["conda-forge"]
 name = "CANCapital"
-platforms = ["linux-aarch64"]
+platforms = ["osx-arm64"]
 version = "0.1.0"
 
 [tasks]
