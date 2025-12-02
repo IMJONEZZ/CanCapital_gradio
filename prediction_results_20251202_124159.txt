@@ -1,0 +1,296 @@
+================================================================================
+MODEL PREDICTION RESULTS
+Generated on: 2025-12-02 12:41:59
+Model Directory: model_20251130_125754
+================================================================================
+
+================================================================================
+CANCapital Model Prediction - Enhanced with Currency Handling
+================================================================================
+
+Loading model from: ./trained_models/model_20251130_125754
+Model Information:
+  target_column: collection_case_days
+  model_type: GradientBoostingRegressor
+  best_mae: 9.9657
+  gbr_mae: 9.9657
+  linreg_mae: 19.1700
+  trained_at: 20251130_125754
+  description: CANCapital loan collection prediction model for 'collection_case_days'
+
+Available model files: ['best_model.pkl', 'gbr_model.pkl', 'linearreg_model.pkl']
+
+Loaded data file: temp_prediction_data.csv
+Data shape: (4217, 30)
+Columns: ['contract_number', 'broker', 'borrower', 'contract_type', 'concurrent_contract_type', 'funded_date', ' original_funded_amount ', ' original_repayment_amount ', 'legal_entity_type', 'sic_count', 'collectin_case_active', 'collection_case_open_date', 'collection_case_close_date', 'collection_case_days', 'collection_status', 'collection_sub_status', 'days_past_due', 'no_missed_payments', 'percent_paid', 'charged_off_date', 'loan_contract_frequency', 'last_payment_date', 'collection_case_owner', 'city_and_state', 'demand_letter_sent_date', 'pg_date_of_birth', 'pg_fico', 'can_tier', 'pg_real_estate', ' total_collected_since_collection_case_created ']
+Original data shape: (4217, 30)
+🔧 Using enhanced currency-aware preprocessing...
+🚀 Starting enhanced data preprocessing...
+
+🔍 Step 1: Detecting currency-formatted columns...
+   Found 17 currency columns: [' original_repayment_amount ', 'charged_off_date', 'demand_letter_sent_date', ' total_collected_since_collection_case_created ', 'collection_case_owner', 'collection_case_close_date', 'pg_date_of_birth', 'borrower', 'last_payment_date', 'percent_paid', 'contract_number', 'sic_count', ' original_funded_amount ', 'can_tier', 'funded_date', 'collection_case_open_date', 'broker']
+🔧 Cleaning currency column:  original_repayment_amount 
+   ✅ Converted 4217/4217 values in ' original_repayment_amount '
+🔧 Cleaning currency column: charged_off_date
+   ✅ Converted 0/1873 values in 'charged_off_date'
+🔧 Cleaning currency column: demand_letter_sent_date
+   ✅ Converted 0/1553 values in 'demand_letter_sent_date'
+🔧 Cleaning currency column:  total_collected_since_collection_case_created 
+   ✅ Converted 3204/4140 values in ' total_collected_since_collection_case_created '
+🔧 Cleaning currency column: collection_case_owner
+   ✅ Converted 0/4217 values in 'collection_case_owner'
+🔧 Cleaning currency column: collection_case_close_date
+   ✅ Converted 0/2629 values in 'collection_case_close_date'
+🔧 Cleaning currency column: pg_date_of_birth
+   ✅ Converted 0/4217 values in 'pg_date_of_birth'
+🔧 Cleaning currency column: borrower
+   ✅ Converted 0/4217 values in 'borrower'
+🔧 Cleaning currency column: last_payment_date
+   ✅ Converted 0/4209 values in 'last_payment_date'
+🔧 Cleaning currency column: percent_paid
+   ✅ Converted 0/4217 values in 'percent_paid'
+🔧 Cleaning currency column: contract_number
+   ✅ Converted 0/4217 values in 'contract_number'
+🔧 Cleaning currency column: sic_count
+   ✅ Converted 0/4217 values in 'sic_count'
+🔧 Cleaning currency column:  original_funded_amount 
+   ✅ Converted 4217/4217 values in ' original_funded_amount '
+🔧 Cleaning currency column: can_tier
+   ✅ Converted 0/4217 values in 'can_tier'
+🔧 Cleaning currency column: funded_date
+   ✅ Converted 0/4217 values in 'funded_date'
+🔧 Cleaning currency column: collection_case_open_date
+   ✅ Converted 0/4217 values in 'collection_case_open_date'
+🔧 Cleaning currency column: broker
+   ✅ Converted 0/3345 values in 'broker'
+   ✅ Currency cleaning completed
+
+📊 Step 2: Applying intelligent imputation...
+📊 Imputed 4217 missing values in 'contract_number' with value: 0.00
+📊 Imputed 4217 missing values in 'broker' with value: 0.00
+📊 Imputed 4217 missing values in 'borrower' with value: 0.00
+📊 Imputed 4217 missing values in 'funded_date' with value: 0.00
+📊 Imputed 4217 missing values in 'sic_count' with value: 0.00
+📊 Imputed 4217 missing values in 'collection_case_open_date' with value: 0.00
+📊 Imputed 4217 missing values in 'collection_case_close_date' with value: 0.00
+📊 Imputed 4217 missing values in 'percent_paid' with value: 0.00
+📊 Imputed 4217 missing values in 'charged_off_date' with value: 0.00
+📊 Imputed 4217 missing values in 'last_payment_date' with value: 0.00
+📊 Imputed 4217 missing values in 'collection_case_owner' with value: 0.00
+📊 Imputed 4217 missing values in 'demand_letter_sent_date' with value: 0.00
+📊 Imputed 4217 missing values in 'pg_date_of_birth' with value: 0.00
+📊 Imputed 1 missing values in 'pg_fico' with value: 693.00
+📊 Imputed 4217 missing values in 'can_tier' with value: 0.00
+📊 Imputed 1013 missing values in ' total_collected_since_collection_case_created ' with value: 18576.50
+   ✅ Smart imputation completed
+
+✅ Step 3: Validating data quality...
+   ❌ Data validation failed!
+      Error: Non-numeric columns found (excluding IDs): ['contract_type', 'concurrent_contract_type', 'legal_entity_type', 'collectin_case_active', 'collection_status', 'collection_sub_status', 'loan_contract_frequency', 'city_and_state', 'pg_real_estate']
+
+🎉 Enhanced preprocessing completed!
+✅ Currency processing completed:
+   - Detected currency columns: [' original_repayment_amount ', 'charged_off_date', 'demand_letter_sent_date', ' total_collected_since_collection_case_created ', 'collection_case_owner', 'collection_case_close_date', 'pg_date_of_birth', 'borrower', 'last_payment_date', 'percent_paid', 'contract_number', 'sic_count', ' original_funded_amount ', 'can_tier', 'funded_date', 'collection_case_open_date', 'broker']
+   - Converted values: 11638
+Removing target column 'collection_case_days' from prediction data
+Final processed data shape: (4217, 29)
+⚠️ Warning: Non-numeric columns remain (will be excluded from modeling): ['contract_type', 'concurrent_contract_type', 'legal_entity_type', 'collectin_case_active', 'collection_status', 'collection_sub_status', 'loan_contract_frequency', 'city_and_state', 'pg_real_estate']
+
+----------------------------------------
+Loading Best Model (Auto-selected) from: best_model.pkl
+----------------------------------------
+Successfully loaded model from: trained_models/model_20251130_125754/best_model.pkl
+Data columns available (20): ['contract_number', 'broker', 'borrower', 'funded_date', ' original_funded_amount ', ' original_repayment_amount ', 'sic_count', 'collection_case_open_date', 'collection_case_close_date', 'days_past_due', 'no_missed_payments', 'percent_paid', 'charged_off_date', 'last_payment_date', 'collection_case_owner', 'demand_letter_sent_date', 'pg_date_of_birth', 'pg_fico', 'can_tier', ' total_collected_since_collection_case_created ']
+Model expects features (35): ['contract_number', 'broker', 'borrower', 'contract_type', 'concurrent_contract_type', 'funded_date', ' original_funded_amount ', ' original_repayment_amount ', 'legal_entity_type', 'sic_count', 'collectin_case_active', 'collection_case_open_date', 'collection_case_close_date', 'collection_status', 'collection_sub_status', 'days_past_due', 'no_missed_payments', 'percent_paid', 'charged_off_date', 'loan_contract_frequency', 'last_payment_date', 'collection_case_owner', 'city_and_state', 'demand_letter_sent_date', 'pg_date_of_birth', 'pg_fico', 'can_tier', 'pg_real_estate', ' total_collected_since_collection_case_created ', 'borrower_age', 'days_funded_to_open', 'days_lastpay_to_close', 'has_collection_case_close_date', 'has_demand_letter_sent_date', 'log_collection_case_days']
+❌ Missing required columns: {'days_lastpay_to_close', 'contract_type', 'collection_status', 'pg_real_estate', 'collectin_case_active', 'legal_entity_type', 'concurrent_contract_type', 'has_demand_letter_sent_date', 'log_collection_case_days', 'has_collection_case_close_date', 'days_funded_to_open', 'borrower_age', 'city_and_state', 'collection_sub_status', 'loan_contract_frequency'}
+Added missing column 'days_lastpay_to_close' with default value 30.0
+Added missing column 'contract_type' with default value 0.5
+Added missing column 'collection_status' with default value 0.5
+Added missing column 'pg_real_estate' with default value 0.5
+Added missing column 'collectin_case_active' with default value 0.5
+Added missing column 'legal_entity_type' with default value 0.5
+Added missing column 'concurrent_contract_type' with default value 0.5
+Added missing column 'has_demand_letter_sent_date' with default value 1
+Added missing column 'log_collection_case_days' with default value 30.0
+Added missing column 'has_collection_case_close_date' with default value 1
+Added missing column 'days_funded_to_open' with default value 30.0
+Added missing column 'borrower_age' with default value 35.0
+Added missing column 'city_and_state' with default value 0.5
+Added missing column 'collection_sub_status' with default value 0.5
+Added missing column 'loan_contract_frequency' with default value 0.5
+
+============================================================
+REGRESSION PREDICTIONS - Best Model (Auto-selected)
+============================================================
+Prediction Summary:
+  Mean: 3.98
+  Std Dev: 1.24
+  Range: [1.56, 5.85]
+  Count: 4217
+
+First 10 Predictions:
+  Sample 1: 5.24
+  Sample 2: 4.51
+  Sample 3: 5.36
+  Sample 4: 2.83
+  Sample 5: 4.94
+  Sample 6: 3.04
+  Sample 7: 3.45
+  Sample 8: 3.65
+  Sample 9: 3.59
+  Sample 10: 3.06
+  ... and 4207 more
+
+✅ Successfully made predictions using Best Model (Auto-selected)
+
+📄 Prediction results saved to: predictions_best_model_20251202_124159.txt
+
+================================================================================
+PREDICTION COMPLETE
+================================================================================
+
+
+Warnings/Errors:
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/.pixi/envs/default/lib/python3.11/site-packages/numpy/lib/_nanfunctions_impl.py:1214: RuntimeWarning: Mean of empty slice
+  return np.nanmean(a, axis, out=out, keepdims=keepdims)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+/Users/michaelatherton/Documents/condaEnv/AIRL/client_projects/cancapital/CanCapital_gradio/src/currency_utils.py:229: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df_imputed[col].fillna(impute_value, inplace=True)
+
+
+================================================================================
