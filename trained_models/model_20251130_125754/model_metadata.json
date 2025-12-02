@@ -1,0 +1,9 @@
+{
+  "target_column": "collection_case_days",
+  "model_type": "GradientBoostingRegressor",
+  "best_mae": 9.965683856802652,
+  "gbr_mae": 9.965683856802652,
+  "linreg_mae": 19.17001270747245,
+  "trained_at": "20251130_125754",
+  "description": "CANCapital loan collection prediction model for 'collection_case_days'"
+}

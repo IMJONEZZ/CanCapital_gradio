@@ -4,3 +4,10 @@
 *.egg-info
 __pycache__
 .gradio
+
+# Temporary outputs and results
+eda_output/
+results/
+predictions_*.txt
+temp_*.csv
+

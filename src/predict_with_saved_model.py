@@ -170,7 +170,7 @@ def preprocess_data(df, target_column=None):
 
         # Import currency utilities
         try:
-            from src.currency_utils import enhanced_preprocess_for_prediction
+            from currency_utils import enhanced_preprocess_for_prediction
             
             # Use the enhanced preprocessing pipeline
             print("🔧 Using enhanced currency-aware preprocessing...")
